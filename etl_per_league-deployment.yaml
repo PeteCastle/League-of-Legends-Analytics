@@ -1,0 +1,135 @@
+###
+### A complete description of a Prefect Deployment for flow 'Per League Complete ETL'
+###
+name: ETL Per League
+description: "Complete ETL flow for the League of Legends API.  Gets all the players\
+  \ list for a given queue, tier, and division, then gets all the matches for each\
+  \ player, \nand then gets all the player information for each match.\nArgs:\n  \
+  \  queue (str): The queue type to filter for. (legal values: RANKED_SOLO_5x5, RANKED_FLEX_SR,\
+  \ RANKED_FLEX_TT)\n    tier (str): The league tier to filter for. (legal values:\
+  \ challengerleagues, grandmasterleagues, masterleagues, DIAMOND, PLATINUM, GOLD,\
+  \ SILVER, BRONZE, IRON)\n    division (str): The league division to filter for.\
+  \ (legal values: I, II, III, IV). (default: I)\n    pages (int): The number of pages\
+  \ to return. (legal range: 1-100). (default: 1)\n    regions (list[str]): A list\
+  \ of regions to filter for. Defaults to all regions if not specified.(legal values:\
+  \ [\"ph2\", \"eun1\", \"euw1\", \"jp1\", \"kr\", \"la1\", \"la2\", \"na1\", \"oc1\"\
+  , \"ru\", \"sg2\", \"th2\", \"tr1\", \"tw2\", \"vn2\",\"br1\"]).\n    ACCOUNT_INPUT_LIMIT\
+  \ (int): The maximum number of account IDs to be sent to the API. Account IDs received\
+  \ from the API are not limited.(default: None)\n    MATCH_INPUT_LIMIT (int): The\
+  \ maximum number of match IDs to be sent to the API. Match IDs received from the\
+  \ API are not limited.(default: None)\n    API_KEYS (list[str]): A list of API keys\
+  \ to use for the request. If None, the program will use the API_KEYS provided in\
+  \ ../configs/flows_config.ini.  Useful if the user has an application API. (default:\
+  \ None)\n    MAXIMUM_CONCURRENT_REQUESTS (int): The maximum number of concurrent\
+  \ requests to make. If instabilities or crashes occur, lower the maximum amount.(default:\
+  \ 100)\nReturns:\n    None"
+version: 9298ffa156534e92b08485d60e34a4de
+# The work queue that will handle this deployment's runs
+work_queue_name: default
+work_pool_name: null
+tags: []
+parameters: {
+    "queue": "RANKED_SOLO_5x5",
+    "tier" : "challengerleagues",
+    "division" : "I",
+    "pages" : 1,
+    "regions" : ["br1","eun1","euw1","jp1","kr","la1","la2","na1","oc1","tr1","ru","ph2","sg2","th2","tw2","vn2"],
+    "ACCOUNT_INPUT_LIMIT" : 10000,
+    "MATCH_INPUT_LIMIT" : 10000,
+    "MAXIMUM_CONCURRENT_REQUESTS" : 500,
+  }
+schedule: null
+is_schedule_active: null
+infra_overrides: {}
+infrastructure:
+  type: process
+  env: {}
+  labels: {}
+  name: null
+  command: null
+  stream_output: true
+  working_dir: null
+  block_type_slug: process
+  _block_type_slug: process
+
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: Per League Complete ETL
+manifest_path: null
+storage: null
+path: D:\Educational Others\2023 Data Engineering Zoomcamp Project
+entrypoint: flows\all_flows.py:etl_per_league
+parameter_openapi_schema:
+  title: Parameters
+  type: object
+  properties:
+    queue:
+      title: queue
+      description: 'The queue type to filter for. (legal values: RANKED_SOLO_5x5,
+        RANKED_FLEX_SR, RANKED_FLEX_TT)'
+      position: 0
+      type: string
+    tier:
+      title: tier
+      description: 'The league tier to filter for. (legal values: challengerleagues,
+        grandmasterleagues, masterleagues, DIAMOND, PLATINUM, GOLD, SILVER, BRONZE,
+        IRON)'
+      position: 1
+      type: string
+    division:
+      title: division
+      description: 'The league division to filter for. (legal values: I, II, III,
+        IV). (default: I)'
+      default: I
+      position: 2
+      type: string
+    pages:
+      title: pages
+      description: 'The number of pages to return. (legal range: 1-100). (default:
+        1)'
+      default: 1
+      position: 3
+      type: integer
+    regions:
+      title: regions
+      description: 'A list of regions to filter for. Defaults to all regions if not
+        specified.(legal values: ["ph2", "eun1", "euw1", "jp1", "kr", "la1", "la2",
+        "na1", "oc1", "ru", "sg2", "th2", "tr1", "tw2", "vn2","br1"]).'
+      position: 4
+      type: array
+      items:
+        type: string
+    ACCOUNT_INPUT_LIMIT:
+      title: ACCOUNT_INPUT_LIMIT
+      description: 'The maximum number of account IDs to be sent to the API. Account
+        IDs received from the API are not limited.(default: None)'
+      position: 5
+      type: integer
+    MATCH_INPUT_LIMIT:
+      title: MATCH_INPUT_LIMIT
+      description: 'The maximum number of match IDs to be sent to the API. Match IDs
+        received from the API are not limited.(default: None)'
+      position: 6
+      type: integer
+    API_KEYS:
+      title: API_KEYS
+      description: 'A list of API keys to use for the request. If None, the program
+        will use the API_KEYS provided in ../configs/flows_config.ini.  Useful if
+        the user has an application API. (default: None)'
+      position: 7
+      type: array
+      items:
+        type: string
+    MAXIMUM_CONCURRENT_REQUESTS:
+      title: MAXIMUM_CONCURRENT_REQUESTS
+      description: 'The maximum number of concurrent requests to make. If instabilities
+        or crashes occur, lower the maximum amount.(default: 100)'
+      default: 100
+      position: 8
+      type: integer
+  required:
+  - queue
+  - tier
+  definitions: null
+timestamp: '2023-04-07T05:40:13.708701+00:00'

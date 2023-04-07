@@ -1,0 +1,61 @@
+###
+### A complete description of a Prefect Deployment for flow 'Extract League Assets'
+###
+name: get_league_assets
+description: |-
+  Complete ETL flow to save all data related to the ETL process.
+  Args:
+      version (str): League of Legends version to get data from.
+      language (str): Language to get data from. Default: PH - English
+  Returns:
+      None
+version: 8838231e6fce767c923fae2a335cc715
+# The work queue that will handle this deployment's runs
+work_queue_name: default
+work_pool_name: default-agent-pool
+tags: []
+parameters: {
+    "version": "13.7.1",
+}
+schedule: null
+is_schedule_active: true
+infra_overrides: {}
+
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: Extract League Assets
+manifest_path: null
+infrastructure:
+  type: process
+  env: {}
+  labels: {}
+  name: null
+  command: null
+  stream_output: true
+  working_dir: null
+  _block_document_id: 3671d2d6-d087-4301-bd6f-3d9124cbe64c
+  _block_document_name: anonymous-3aa0b432-6bee-4840-8ee5-caa59f75dd98
+  _is_anonymous: true
+  block_type_slug: process
+  _block_type_slug: process
+storage: null
+path: D:\Educational Others\2023 Data Engineering Zoomcamp Project
+entrypoint: flows\league_assets.py:get_league_assets
+parameter_openapi_schema:
+  title: Parameters
+  type: object
+  properties:
+    version:
+      title: version
+      description: League of Legends version to get data from.
+      position: 0
+    language:
+      title: language
+      description: 'Language to get data from. Default: PH - English'
+      default: en_PH
+      position: 1
+  required:
+  - version
+  definitions: null
+timestamp: '2023-04-06T03:41:21.454817+00:00'

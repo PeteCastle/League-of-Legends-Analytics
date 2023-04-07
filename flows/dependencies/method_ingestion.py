@@ -16,6 +16,7 @@ def ingestMultipleMatches(matches: list[str], RIOT_TOKENS: list, MAXIMUM_CONCURR
 
 @flow(name="ingestMultiplePlayerMatches")
 def ingestMultiplePlayerMatches(player_uuids : list[tuple], ACCOUNT_INPUT_LIMIT : int, MAXIMUM_CONCURRENT_REQUESTS : int, match_count : int = 20) -> list[dict]:
+    print("Ingesting multiple player matches")
     random.shuffle(player_uuids)
     if ACCOUNT_INPUT_LIMIT is not None:
         if len(player_uuids) < ACCOUNT_INPUT_LIMIT:
@@ -33,6 +34,7 @@ def ingestTopLeagueEntries(queue: str, tier:str,region, riot_token : str) -> dic
 
 @flow(name="ingestMultiplePlayerEntries")
 def ingestMultiplePlayerEntries(players : list[tuple], ACCOUNT_INPUT_LIMIT: int , MAXIMUM_CONCURRENT_REQUESTS : int) -> list[dict]:
+    print("Ingesting multiple player entries")
     random.shuffle(players)
     if ACCOUNT_INPUT_LIMIT is not None:
         if len(players) < ACCOUNT_INPUT_LIMIT:

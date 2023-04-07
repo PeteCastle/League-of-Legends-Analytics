@@ -9,11 +9,11 @@ from dependencies.match_entries import getMultipleMatchInfo
 from dependencies.method_ingestion import ingestMultiplePlayerEntries, ingestMultiplePlayerMatches
 from dependencies.method_ingestion import ingestMultiplePlayerMasteryIds
 from dependencies.dataframe_extras import cleanDataframe, save_or_upload_dataframe
-from datetime import date
+from datetime import datetime
 from pathlib import Path
 
-@flow(name="all_flow", log_prints=True)
-def all_flow(
+@flow(name="Per League Complete ETL", log_prints=True)
+def etl_per_league(
     queue: str,
     tier : str,
     division : str = "I",
@@ -43,8 +43,9 @@ def all_flow(
 
     #Configuration
     config = json.load(open('configs/flows_config.json'))
+    credentials = json.load(open('credentials/credentials.json'))
     if API_KEYS is None:
-        API_KEYS = config["API_KEYS"]
+        API_KEYS = credentials["API_KEYS"]
         if len(API_KEYS) == 0:
             raise ValueError("No Riot API keys provided.")
     REGION_GROUPINGS = config["region_groupings"]
@@ -87,14 +88,46 @@ def all_flow(
     match_teams_info = cleanDataframe(match_teams_info, "match_teams_info")
     player_champion_mastery_info = cleanDataframe(player_champion_mastery_info, "player_champion_mastery_info")
 
-    save_time = date.today()
-    save_or_upload_dataframe(league_info,Path(f"resources/datasets/leagues/{queue}/{tier}/{division}/"),f"{save_time}.parquet")
-    save_or_upload_dataframe(accounts_info,Path(f"resources/datasets/accounts/"),f"{save_time}.parquet")
-    save_or_upload_dataframe(match_general_info,Path(f"resources/datasets/match/general/{queue}/{tier}/{division}"),f"{save_time}.parquet")
-    save_or_upload_dataframe(match_players_info,Path(f"resources/datasets/match/players/{queue}/{tier}/{division}/"),f"{save_time}.parquet")
-    save_or_upload_dataframe(match_teams_info,Path(f"resources/datasets/match/teams/{queue}/{tier}/{division}/"),f"{save_time}.parquet")
-    save_or_upload_dataframe(match_players_challenges_info,Path(f"resources/datasets/match/players_challenges/{queue}/{tier}/{division}/"),f"{save_time}.parquet")
-    save_or_upload_dataframe(player_champion_mastery_info,Path(f"resources/datasets/champion_mastery/"),f"{save_time}.parquet")
+    save_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    save_or_upload_dataframe(league_info,Path(f"leagues/{queue}/{tier}/{division}/"),f"{save_time}.parquet")
+    save_or_upload_dataframe(accounts_info,Path(f"accounts/"),f"{save_time}.parquet")
+    save_or_upload_dataframe(match_general_info,Path(f"match/general/{queue}/{tier}/{division}"),f"{save_time}.parquet")
+    save_or_upload_dataframe(match_players_info,Path(f"match/players/{queue}/{tier}/{division}/"),f"{save_time}.parquet")
+    save_or_upload_dataframe(match_teams_info,Path(f"match/teams/{queue}/{tier}/{division}/"),f"{save_time}.parquet")
+    save_or_upload_dataframe(match_players_challenges_info,Path(f"match/players_challenges/{queue}/{tier}/{division}/"),f"{save_time}.parquet")
+    save_or_upload_dataframe(player_champion_mastery_info,Path(f"champion_mastery/"),f"{save_time}.parquet")
   
+@flow(name = "All Leagues Complete ETL", log_prints = True)
+def etl_all_league(
+    queue: str,
+    pages : int = 1,
+    regions : list[str] = None,
+    ACCOUNT_INPUT_LIMIT : int = None,
+    MATCH_INPUT_LIMIT : int = None,
+    API_KEYS : list[str] = None, 
+    MAXIMUM_CONCURRENT_REQUESTS : int = 100,
+):
+    """
+        Complete all flow, but for all leagues.
+        Args:
+            queue (str): The queue type to filter for. (legal values: RANKED_SOLO_5x5, RANKED_FLEX_SR, RANKED_FLEX_TT)
+            pages (int): The number of pages to return. (legal range: 1-100). (default: 1)
+            regions (list[str]): A list of regions to filter for. Defaults to all regions if not specified.(legal values: ["ph2", "eun1", "euw1", "jp1", "kr", "la1", "la2", "na1", "oc1", "ru", "sg2", "th2", "tr1", "tw2", "vn2","br1"]).
+            ACCOUNT_INPUT_LIMIT (int): The maximum number of account IDs to be sent to the API. Account IDs received from the API are not limited.(default: None)
+            MATCH_INPUT_LIMIT (int): The maximum number of match IDs to be sent to the API. Match IDs received from the API are not limited.(default: None)
+            API_KEYS (list[str]): A list of API keys to use for the request. If None, the program will use the API_KEYS provided in ../configs/flows_config.ini.  Useful if the user has an application API. (default: None)
+            MAXIMUM_CONCURRENT_REQUESTS (int): The maximum number of concurrent requests to make. If instabilities or crashes occur, lower the maximum amount.(default: 100)
+        Returns:
+            None
+    """
+    for tier in ["challengerleagues", "grandmasterleagues", "masterleagues", "DIAMOND", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"]:
+        if tier in ["challengerleagues", "grandmasterleagues", "masterleagues"]:
+            print(f"Starting {tier} ETL")
+            etl_per_league(queue, tier, "I", pages, regions, ACCOUNT_INPUT_LIMIT, MATCH_INPUT_LIMIT, API_KEYS, MAXIMUM_CONCURRENT_REQUESTS)
+        else:
+            for division in ["I", "II", "III", "IV"]:
+                print(f"Starting {tier} {division} ETL")
+                etl_per_league(queue, tier, division, pages, regions, ACCOUNT_INPUT_LIMIT, MATCH_INPUT_LIMIT, API_KEYS, MAXIMUM_CONCURRENT_REQUESTS)
+    
 
-all_flow("RANKED_SOLO_5x5", "challengerleagues", "I",1, ACCOUNT_INPUT_LIMIT=1,MATCH_INPUT_LIMIT = 1, MAXIMUM_CONCURRENT_REQUESTS = 500)
+# etl_all("RANKED_SOLO_5x5", "challengerleagues", "I",1, ACCOUNT_INPUT_LIMIT=10000,MATCH_INPUT_LIMIT = 10000, MAXIMUM_CONCURRENT_REQUESTS = 500)

@@ -57,6 +57,11 @@ async def getApiRequest(url, riot_token: str) -> dict:
 
                     await asyncio.sleep(retry_after)
                     return await getApiRequest(url, riot_token)
+                elif response.status == 503:
+                    # retry_after = int(response.headers.get('Retry-After', '1'))
+                    print(f"503 Service Unavailable Error on {url} with API {riot_token}.  Retrying in 10 seconds...")
+                    await asyncio.sleep(10)
+                    return await getApiRequest(url, riot_token)
 
                 # print(f"Completed requests on {url} and API token {riot_token}")
 
