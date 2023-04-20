@@ -1,12 +1,11 @@
 ###
 ### A complete description of a Prefect Deployment for flow 'All Leagues Complete ETL'
 ###
-name: All Leagues Complete ETL
+name: All Leagues
 description: |-
   Complete all flow, but for all leagues.
   Args:
       queue (str): The queue type to filter for. (legal values: RANKED_SOLO_5x5, RANKED_FLEX_SR, RANKED_FLEX_TT)
-      division (str): The league division to filter for. (legal values: I, II, III, IV). (default: I)
       pages (int): The number of pages to return. (legal range: 1-100). (default: 1)
       regions (list[str]): A list of regions to filter for. Defaults to all regions if not specified.(legal values: ["ph2", "eun1", "euw1", "jp1", "kr", "la1", "la2", "na1", "oc1", "ru", "sg2", "th2", "tr1", "tw2", "vn2","br1"]).
       ACCOUNT_INPUT_LIMIT (int): The maximum number of account IDs to be sent to the API. Account IDs received from the API are not limited.(default: None)
@@ -15,23 +14,15 @@ description: |-
       MAXIMUM_CONCURRENT_REQUESTS (int): The maximum number of concurrent requests to make. If instabilities or crashes occur, lower the maximum amount.(default: 100)
   Returns:
       None
-version: f590132e855829e139ced64f7b225892
+version: 2e1a43c72189fcc3fd4777d53d17110f
 # The work queue that will handle this deployment's runs
 work_queue_name: default
-work_pool_name: default-agent-pool
+work_pool_name: null
 tags: []
-parameters: {
-    "queue": "RANKED_SOLO_5x5",
-}
+parameters: {}
 schedule: null
-is_schedule_active: true
+is_schedule_active: null
 infra_overrides: {}
-
-###
-### DO NOT EDIT BELOW THIS LINE
-###
-flow_name: All Leagues Complete ETL
-manifest_path: null
 infrastructure:
   type: process
   env: {}
@@ -40,11 +31,14 @@ infrastructure:
   command: null
   stream_output: true
   working_dir: null
-  _block_document_id: 4f2c981b-42aa-4fff-b0f2-c673fa8ba920
-  _block_document_name: anonymous-5c3e1f0d-0417-4b95-b975-e1109b24e1fe
-  _is_anonymous: true
   block_type_slug: process
   _block_type_slug: process
+
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: All Leagues Complete ETL
+manifest_path: null
 storage: null
 path: D:\Educational Others\2023 Data Engineering Zoomcamp Project
 entrypoint: flows\all_flows.py:etl_all_league
@@ -105,4 +99,4 @@ parameter_openapi_schema:
   required:
   - queue
   definitions: null
-timestamp: '2023-04-07T05:53:09.519926+00:00'
+timestamp: '2023-04-10T03:48:49.473782+00:00'

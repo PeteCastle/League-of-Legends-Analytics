@@ -87,7 +87,7 @@ def getLeagueEntries(queue : str,
         Returns:
             None
     """
-    print("Ingesting League Entries")
+    print(f"Ingesting League Entries in {tier}")
     league_infos_list = []
     if tier in ["challengerleagues", "grandmasterleagues", "masterleagues"]:
         league_infos_list = [getTopLeagueEntries(queue=queue, tier=tier, region=region, RIOT_TOKENS = RIOT_TOKENS) for region in regions]

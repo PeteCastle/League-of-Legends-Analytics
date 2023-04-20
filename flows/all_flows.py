@@ -51,9 +51,10 @@ def etl_per_league(
     REGION_GROUPINGS = config["region_groupings"]
     if regions is None:
         regions = list(REGION_GROUPINGS.keys())
+    
 
     #League Entries
-    league_info, player_league_info = getLeagueEntries(queue="RANKED_SOLO_5x5", tier="challengerleagues", division='I', pages=1, regions = regions, RIOT_TOKENS=API_KEYS)
+    league_info, player_league_info = getLeagueEntries(queue=queue, tier=tier, division='I', pages=1, regions = regions, RIOT_TOKENS=API_KEYS)
 
     #Player Entries
     player_leagues_tuple = list(player_league_info[["region","summonerId","riot_token"]].itertuples(index=False, name=None))
@@ -61,6 +62,7 @@ def etl_per_league(
     del player_leagues_tuple
 
     #Accounts Info
+    print("Merging player info and league info with columns")
     accounts_info = pd.DataFrame(player_info).merge(player_league_info, left_on='id', right_on = 'summonerId', how='left')
     accounts_info["region_group"] = accounts_info["region"].map(REGION_GROUPINGS)
 
@@ -70,8 +72,8 @@ def etl_per_league(
     del player_infos_tuple
 
     #Match History Info
-    match_general_info, match_players_info, match_teams_info, match_players_challenges_info = getMultipleMatchInfo(match_history_raw, MATCH_INPUT_LIMIT, API_KEYS, MAXIMUM_CONCURRENT_REQUESTS, REGION_GROUPINGS)
-    
+    # match_general_info, match_players_info, match_teams_info, match_players_challenges_info = getMultipleMatchInfo(match_history_raw, MATCH_INPUT_LIMIT, API_KEYS, MAXIMUM_CONCURRENT_REQUESTS, REGION_GROUPINGS)
+    match_general_info, match_players_info, match_teams_info, match_players_challenges_info = getMultipleMatchInfo(match_history_raw, API_KEYS,MAXIMUM_CONCURRENT_REQUESTS,REGION_GROUPINGS,MATCH_INPUT_LIMIT)
     # Player Mastery Info
     player_infos_tuple = list(accounts_info[['id','region','riot_token']].itertuples(index=False, name=None))
     player_champion_mastery_info = itertools.chain.from_iterable(ingestMultiplePlayerMasteryIds(player_infos_tuple, MAXIMUM_CONCURRENT_REQUESTS, ACCOUNT_INPUT_LIMIT))
@@ -105,7 +107,7 @@ def etl_all_league(
     ACCOUNT_INPUT_LIMIT : int = None,
     MATCH_INPUT_LIMIT : int = None,
     API_KEYS : list[str] = None, 
-    MAXIMUM_CONCURRENT_REQUESTS : int = 100,
+    MAXIMUM_CONCURRENT_REQUESTS : int = 500,
 ):
     """
         Complete all flow, but for all leagues.
@@ -120,7 +122,7 @@ def etl_all_league(
         Returns:
             None
     """
-    for tier in ["challengerleagues", "grandmasterleagues", "masterleagues", "DIAMOND", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"]:
+    for tier in ["challengerleagues", "grandmasterleagues", "masterleagues","DIAMOND","PLATINUM","GOLD","SILVER", "BRONZE", "IRON"]:
         if tier in ["challengerleagues", "grandmasterleagues", "masterleagues"]:
             print(f"Starting {tier} ETL")
             etl_per_league(queue, tier, "I", pages, regions, ACCOUNT_INPUT_LIMIT, MATCH_INPUT_LIMIT, API_KEYS, MAXIMUM_CONCURRENT_REQUESTS)
@@ -130,4 +132,4 @@ def etl_all_league(
                 etl_per_league(queue, tier, division, pages, regions, ACCOUNT_INPUT_LIMIT, MATCH_INPUT_LIMIT, API_KEYS, MAXIMUM_CONCURRENT_REQUESTS)
     
 
-# etl_all("RANKED_SOLO_5x5", "challengerleagues", "I",1, ACCOUNT_INPUT_LIMIT=10000,MATCH_INPUT_LIMIT = 10000, MAXIMUM_CONCURRENT_REQUESTS = 500)
+# etl_all_league("RANKED_SOLO_5x5",1, ACCOUNT_INPUT_LIMIT=2000,MATCH_INPUT_LIMIT = 2000, MAXIMUM_CONCURRENT_REQUESTS = 500)

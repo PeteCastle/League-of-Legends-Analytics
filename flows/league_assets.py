@@ -273,4 +273,4 @@ def download_data_dragon_file(url: str, local_file : str):
         f.write(response.content)
 
 
-# get_league_assets("13.7.1")
+get_league_assets("13.7.1")

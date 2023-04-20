@@ -1,3 +1,4 @@
 credentials
 resources/datasets
 terraform/.terraform
+.databricks

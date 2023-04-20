@@ -108,7 +108,7 @@ def getMatchPlayerChallengesInfo(raw_match:dict) -> list[dict]:
     return players_challenges_info
 
 @flow(name = "getMultipleMatchInfo")
-def getMultipleMatchInfo(match_history_raw: list, MATCH_INPUT_LIMIT : int, RIOT_TOKENS : list, MAXIMUM_CONCURRENT_REQUESTS : int,  REGION_GROUPINGS : dict,) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def getMultipleMatchInfo(match_history_raw: list, RIOT_TOKENS : list, MAXIMUM_CONCURRENT_REQUESTS : int,  REGION_GROUPINGS : dict, MATCH_INPUT_LIMIT : int = None) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 
     match_history_list = list(itertools.chain.from_iterable(match_history_raw))
     raw_matches = ingestMultipleMatches(match_history_list, RIOT_TOKENS, MAXIMUM_CONCURRENT_REQUESTS,REGION_GROUPINGS, MATCH_INPUT_LIMIT )

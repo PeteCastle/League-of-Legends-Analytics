@@ -15,7 +15,7 @@ def ingestMultipleMatches(matches: list[str], RIOT_TOKENS: list, MAXIMUM_CONCURR
     return asyncio.run(getMatchesRequestFromApi(matches,REGION_GROUPINGS,RIOT_TOKENS, MAXIMUM_CONCURRENT_REQUESTS))
 
 @flow(name="ingestMultiplePlayerMatches")
-def ingestMultiplePlayerMatches(player_uuids : list[tuple], ACCOUNT_INPUT_LIMIT : int, MAXIMUM_CONCURRENT_REQUESTS : int, match_count : int = 20) -> list[dict]:
+def ingestMultiplePlayerMatches(player_uuids : list[tuple], MAXIMUM_CONCURRENT_REQUESTS : int,ACCOUNT_INPUT_LIMIT : int = None,  match_count : int = 20) -> list[dict]:
     print("Ingesting multiple player matches")
     random.shuffle(player_uuids)
     if ACCOUNT_INPUT_LIMIT is not None:
@@ -33,7 +33,7 @@ def ingestTopLeagueEntries(queue: str, tier:str,region, riot_token : str) -> dic
     return asyncio.run(getTopLeagueEntriesFromApi(queue, tier, region,riot_token))[0]
 
 @flow(name="ingestMultiplePlayerEntries")
-def ingestMultiplePlayerEntries(players : list[tuple], ACCOUNT_INPUT_LIMIT: int , MAXIMUM_CONCURRENT_REQUESTS : int) -> list[dict]:
+def ingestMultiplePlayerEntries(players : list[tuple], ACCOUNT_INPUT_LIMIT: int = None, MAXIMUM_CONCURRENT_REQUESTS : int= None) -> list[dict]:
     print("Ingesting multiple player entries")
     random.shuffle(players)
     if ACCOUNT_INPUT_LIMIT is not None:
@@ -44,7 +44,7 @@ def ingestMultiplePlayerEntries(players : list[tuple], ACCOUNT_INPUT_LIMIT: int 
     return asyncio.run(getMultiplePlayerEntriesFromApi(players,MAXIMUM_CONCURRENT_REQUESTS))
 
 @flow(name="ingestMultiplePlayerMasteryIds")
-def ingestMultiplePlayerMasteryIds(summoner_ids : list[tuple], MAXIMUM_CONCURRENT_REQUESTS : int, ACCOUNT_INPUT_LIMIT: int) -> list[dict]:
+def ingestMultiplePlayerMasteryIds(summoner_ids : list[tuple], MAXIMUM_CONCURRENT_REQUESTS : int= None, ACCOUNT_INPUT_LIMIT: int= None) -> list[dict]:
     random.shuffle(summoner_ids)
     if ACCOUNT_INPUT_LIMIT is not None:
         if len(summoner_ids) < ACCOUNT_INPUT_LIMIT:
