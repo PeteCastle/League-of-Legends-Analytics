@@ -1,7 +1,7 @@
 ###
 ### A complete description of a Prefect Deployment for flow 'All Leagues Complete ETL'
 ###
-name: All Leagues
+name: ETL All Leagues Block
 description: |-
   Complete all flow, but for all leagues.
   Args:
@@ -14,7 +14,7 @@ description: |-
       MAXIMUM_CONCURRENT_REQUESTS (int): The maximum number of concurrent requests to make. If instabilities or crashes occur, lower the maximum amount.(default: 100)
   Returns:
       None
-version: 2e1a43c72189fcc3fd4777d53d17110f
+version: e2149b7f1145790baf63965ed8b907f1
 # The work queue that will handle this deployment's runs
 work_queue_name: default
 work_pool_name: null
@@ -39,8 +39,21 @@ infrastructure:
 ###
 flow_name: All Leagues Complete ETL
 manifest_path: null
-storage: null
-path: D:\Educational Others\2023 Data Engineering Zoomcamp Project
+storage:
+  bucket_path: zoomcamp-storage-block
+  azure_storage_connection_string: '**********'
+  azure_storage_account_name: null
+  azure_storage_account_key: null
+  azure_storage_tenant_id: null
+  azure_storage_client_id: null
+  azure_storage_client_secret: null
+  azure_storage_anon: false
+  _block_document_id: 8302b7ed-f39a-4228-9a89-781f723a4aa7
+  _block_document_name: azure-block
+  _is_anonymous: false
+  block_type_slug: azure
+  _block_type_slug: azure
+path: ''
 entrypoint: flows\all_flows.py:etl_all_league
 parameter_openapi_schema:
   title: Parameters
@@ -93,10 +106,10 @@ parameter_openapi_schema:
       title: MAXIMUM_CONCURRENT_REQUESTS
       description: 'The maximum number of concurrent requests to make. If instabilities
         or crashes occur, lower the maximum amount.(default: 100)'
-      default: 100
+      default: 500
       position: 6
       type: integer
   required:
   - queue
   definitions: null
-timestamp: '2023-04-10T03:48:49.473782+00:00'
+timestamp: '2023-04-20T12:14:11.727789+00:00'

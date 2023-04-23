@@ -53,7 +53,7 @@ async def getApiRequest(url, riot_token: str) -> dict:
                 
                 if response.status == 429:
                     retry_after = int(response.headers.get('Retry-After', '1'))
-                    # print("Rate limited, retrying after " + str(retry_after) + " seconds.")
+                    print("Rate limited, retrying after " + str(retry_after) + " seconds.")
 
                     await asyncio.sleep(retry_after)
                     return await getApiRequest(url, riot_token)

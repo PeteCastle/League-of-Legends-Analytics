@@ -68,7 +68,7 @@ def etl_per_league(
 
     #Player's Match History
     player_infos_tuple =list(accounts_info[['puuid','region_group','riot_token']].itertuples(index=False, name=None))
-    match_history_raw = ingestMultiplePlayerMatches(player_infos_tuple, ACCOUNT_INPUT_LIMIT, MAXIMUM_CONCURRENT_REQUESTS)
+    match_history_raw = ingestMultiplePlayerMatches(player_infos_tuple,MAXIMUM_CONCURRENT_REQUESTS, ACCOUNT_INPUT_LIMIT )
     del player_infos_tuple
 
     #Match History Info
@@ -132,4 +132,4 @@ def etl_all_league(
                 etl_per_league(queue, tier, division, pages, regions, ACCOUNT_INPUT_LIMIT, MATCH_INPUT_LIMIT, API_KEYS, MAXIMUM_CONCURRENT_REQUESTS)
     
 
-# etl_all_league("RANKED_SOLO_5x5",1, ACCOUNT_INPUT_LIMIT=2000,MATCH_INPUT_LIMIT = 2000, MAXIMUM_CONCURRENT_REQUESTS = 500)
+etl_all_league("RANKED_SOLO_5x5",1, ACCOUNT_INPUT_LIMIT=2000,MATCH_INPUT_LIMIT = 2000, MAXIMUM_CONCURRENT_REQUESTS = 500)

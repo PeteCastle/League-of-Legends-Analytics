@@ -64,6 +64,12 @@ resource "azurerm_storage_container" "sc_project" {
   container_access_type = "blob"
 }
 
+resource "azurerm_storage_container" "storage_block" {
+  name                  = "zoomcamp-storage-block"
+  storage_account_name  = azurerm_storage_account.sa_project.name
+  container_access_type = "blob"
+}
+
 resource "azurerm_databricks_workspace" "db_project" {
   name                = "zoomcampdbproject"
   resource_group_name = azurerm_resource_group.rg_project.name
@@ -87,8 +93,42 @@ resource "databricks_cluster" "cluster_project" {
     "spark.databricks.cluster.profile" = "singleNode"
     "spark.databricks.delta.preview.enabled" = "true"
     "spark.master" : "local[*]"
+    "fs.azure" : "org.apache.hadoop.fs.azure.NativeAzureFileSystem"
+    "fs.azure.account.key.zoomcampsaproject.blob.core.windows.net" : local.credentials["AZURE_BLOB_STORAGE_KEY"]
   }
   custom_tags = {
     "ResourceClass" = "SingleNode"
   }
 }
+
+resource "azurerm_container_group" "zoomcamp-container-group" {
+  name                = "zoomcamp-container-group"
+  location            = azurerm_resource_group.rg_project.location
+  resource_group_name = azurerm_resource_group.rg_project.name
+  ip_address_type     = "Public"
+  os_type             = "Linux"
+
+  container {
+    name   = "prefect-agent-container"
+    image  = "prefecthq/prefect:2-python3.10"
+    cpu    = "1"
+    memory = "1.5"
+  
+    ports {
+      port     = 443
+      protocol = "TCP"
+    }
+    secure_environment_variables = {
+      "PREFECT_API_URL" = local.credentials["PREFECT_API_URL"]
+      "PREFECT_API_KEY" = local.credentials["PREFECT_API_KEY"]
+    }
+    commands = [
+      "/bin/bash",
+      "-c",
+      "pip install adlfs s3fs requests pandas aiohttp asyncio datetime numpy prefect_azure prefect pathlib ; prefect agent start -p default-agent-pool -q test"
+    ]
+  }
+
+  depends_on = [databricks_cluster.cluster_project]
+}
+

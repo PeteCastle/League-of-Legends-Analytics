@@ -2,3 +2,7 @@ credentials
 resources/datasets
 terraform/.terraform
 .databricks
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/terraform.tfvars
+
