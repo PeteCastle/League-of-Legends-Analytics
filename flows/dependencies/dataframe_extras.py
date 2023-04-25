@@ -40,7 +40,7 @@ def save_or_upload_dataframe(df: pd.DataFrame , folder_path: Path, file_name : s
         # df.to_parquet("temp.parquet", index=False)
         # with open("temp.parquet", "rb") as f:
         #     data = f.read()
-        blob_storage_upload(data= df.to_parquet( index = False) ,container="zoomcampcontainerproject",blob=full_path, blob_storage_credentials=blob_storage,  overwrite=True)
+        blob_storage_upload(data= df.to_csv( index = False) ,container="zoomcampcontainerproject",blob=full_path, blob_storage_credentials=blob_storage,  overwrite=True)
         # os.remove("temp.parquet")
         print(f"Saved file {full_path} to Azure storage account")
         

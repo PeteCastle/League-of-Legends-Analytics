@@ -189,13 +189,15 @@ def getRuneInfo(version: str,language:str) -> pd.DataFrame:
     rune_infos_raw = json.load(open(f"resources/data_dragon_{version}/{version}/data/{language}/runesReforged.json", encoding='utf-8'))
     rune_infos = []
 
+
     for rune_path in rune_infos_raw:
+
         rune_info = {}
         rune_info["version"] = version
         rune_info["id"] = rune_path["id"]
         rune_info["key"] = rune_path["key"]
         rune_info["rune_path"] = rune_path["key"]
-        rune_info["icon"] = rune_path["icon"]
+        rune_info["rune_path_icon"] = rune_path["icon"]
         rune_info["name"] = rune_path["name"]
         rune_infos.append(rune_info)
         del rune_info

@@ -91,13 +91,13 @@ def etl_per_league(
     player_champion_mastery_info = cleanDataframe(player_champion_mastery_info, "player_champion_mastery_info")
 
     save_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    save_or_upload_dataframe(league_info,Path(f"leagues/{queue}/{tier}/{division}/"),f"{save_time}.parquet")
-    save_or_upload_dataframe(accounts_info,Path(f"accounts/"),f"{save_time}.parquet")
-    save_or_upload_dataframe(match_general_info,Path(f"match/general/{queue}/{tier}/{division}"),f"{save_time}.parquet")
-    save_or_upload_dataframe(match_players_info,Path(f"match/players/{queue}/{tier}/{division}/"),f"{save_time}.parquet")
-    save_or_upload_dataframe(match_teams_info,Path(f"match/teams/{queue}/{tier}/{division}/"),f"{save_time}.parquet")
-    save_or_upload_dataframe(match_players_challenges_info,Path(f"match/players_challenges/{queue}/{tier}/{division}/"),f"{save_time}.parquet")
-    save_or_upload_dataframe(player_champion_mastery_info,Path(f"champion_mastery/"),f"{save_time}.parquet")
+    save_or_upload_dataframe(league_info,Path(f"leagues/{queue}/{tier}/{division}/"),f"{save_time}.csv")
+    save_or_upload_dataframe(accounts_info,Path(f"accounts/"),f"{save_time}.csv")
+    save_or_upload_dataframe(match_general_info,Path(f"match/general/{queue}/{tier}/{division}"),f"{save_time}.csv")
+    save_or_upload_dataframe(match_players_info,Path(f"match/players/{queue}/{tier}/{division}/"),f"{save_time}.csv")
+    save_or_upload_dataframe(match_teams_info,Path(f"match/teams/{queue}/{tier}/{division}/"),f"{save_time}.csv")
+    save_or_upload_dataframe(match_players_challenges_info,Path(f"match/players_challenges/{queue}/{tier}/{division}/"),f"{save_time}.csv")
+    save_or_upload_dataframe(player_champion_mastery_info,Path(f"champion_mastery/"),f"{save_time}.csv")
   
 @flow(name = "All Leagues Complete ETL", log_prints = True)
 def etl_all_league(
@@ -122,7 +122,7 @@ def etl_all_league(
         Returns:
             None
     """
-    for tier in ["challengerleagues", "grandmasterleagues", "masterleagues","DIAMOND","PLATINUM","GOLD","SILVER", "BRONZE", "IRON"]:
+    for tier in ["BRONZE", "IRON"]:
         if tier in ["challengerleagues", "grandmasterleagues", "masterleagues"]:
             print(f"Starting {tier} ETL")
             etl_per_league(queue, tier, "I", pages, regions, ACCOUNT_INPUT_LIMIT, MATCH_INPUT_LIMIT, API_KEYS, MAXIMUM_CONCURRENT_REQUESTS)
