@@ -1,0 +1,12 @@
+version: 2
+sources:
+  - name: data_dragon
+    # database : dbo
+    schema : default
+    tables:
+      - name : champion_info
+      - name : item_info
+      - name : rune_info
+
+models:
+  - name: champion_pick_count__unclean

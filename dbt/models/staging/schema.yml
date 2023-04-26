@@ -1,0 +1,93 @@
+version : 2
+
+# sources:
+#   - name: staging
+#     schema: dbt_petecastle
+#     tables:
+
+models:
+  - name: stg_accounts
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - name
+            - region
+    columns:
+      - name: leagueId
+        tests:
+          - not_null
+  - name: stg_leagues
+    columns:
+    - name: leagueId
+      tests:
+          - not_null
+  - name: stg_league_accounts_merged
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - name
+            - region
+    columns:
+    - name: name
+      tests:
+          - not_null
+    - name: region
+      tests:
+          - not_null
+    - name: queue
+      tests:
+          - not_null
+    - name: tier
+      tests:
+          - not_null
+    - name: division
+      tests:
+          - not_null
+  - name: stg_champion_mastery
+    columns:
+    - name: summonerName
+      description: "The primary key for this table"
+      tests:
+          - not_null
+    - name: region
+      description: "The secondary key for this table"
+      tests:
+          - not_null
+    - name: championId
+      description: "Champion ID assigned"
+      tests:
+          - not_null
+  - name: stg_general_match
+    columns:
+    - name: matchId
+      description: "The primary key for this table"
+      tests:
+          - not_null
+  - name: stg_players_match
+    columns:
+    - name: matchId
+      description: "The primary key for this table"
+      tests:
+          - not_null
+  - name: stg_teams_match
+    columns:
+    - name: matchId
+      description: "The primary key for this table"
+      tests:
+          - not_null
+  - name: stg_player_challenges_match
+    columns:
+    - name: matchId
+      description: "The primary key for this table"
+      tests:
+          - unique
+          - not_null
+  - name: stg_league_accounts_players_matches_merged
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - summonerName
+            - region
+          severity: warn
+
+
