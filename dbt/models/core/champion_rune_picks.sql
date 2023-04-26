@@ -1,0 +1,195 @@
+{{ config(materialized='table')}}
+
+{% set remove_list = ["allInPings",
+"assistMePings",
+"assists",
+"baitPings",
+"baronKills",
+"basicPings",
+"bountyLevel",
+"champExperience",
+"championName",
+"championTransform",
+"champLevel",
+"commandPings",
+"consumablesPurchased",
+"damageDealtToBuildings",
+"damageDealtToObjectives",
+"damageDealtToTurrets",
+"damageSelfMitigated",
+"dangerPings",
+"deaths",
+"detectorWardsPlaced",
+"doubleKills",
+"dragonKills",
+"eligibleForProgression",
+"enemyMissingPings",
+"enemyVisionPings",
+"firstBloodAssist",
+"firstBloodKill",
+"firstTowerAssist",
+"firstTowerKill",
+"gameEndedInEarlySurrender",
+"gameEndedInSurrender",
+"getBackPings",
+"goldEarned",
+"goldSpent",
+"holdPings",
+"individualPosition",
+"inhibitorKills",
+"inhibitorsLost",
+"inhibitorTakedowns",
+"itemsPurchased",
+"item0",
+"item1",
+"item2",
+"item3",
+"item4",
+"item5",
+"item6",
+"killingSprees",
+"kills",
+"lane",
+"largestCriticalStrike",
+"largestKillingSpree",
+"largestMultiKill",
+"last_update",
+"longestTimeSpentLiving",
+"magicDamageDealt",
+"magicDamageDealtToChampions",
+"magicDamageTaken",
+"needVisionPings",
+"neutralMinionsKilled",
+"nexusKills",
+"nexusLost",
+"nexusTakedowns",
+"objectivesStolen",
+"objectivesStolenAssists",
+"onMyWayPings",
+"participantId",
+"pentaKills",
+"physicalDamageDealt",
+"physicalDamageDealtToChampions",
+"physicalDamageTaken",
+"primaryStyle_0_var1",
+"primaryStyle_0_var2",
+"primaryStyle_0_var3",
+"primaryStyle_1_var1",
+"primaryStyle_1_var2",
+"primaryStyle_1_var3",
+"primaryStyle_2_var1",
+"primaryStyle_2_var2",
+"primaryStyle_2_var3",
+"primaryStyle_3_var1",
+"primaryStyle_3_var2",
+"primaryStyle_3_var3",
+"primaryStyle_id",
+"profileIcon",
+"pushPings",
+"quadraKills",
+"riotIdName",
+"riotIdTagline",
+"role",
+"sightWardsBoughtInGame",
+"spell1Casts",
+"spell2Casts",
+"spell3Casts",
+"spell4Casts",
+"subStyle_0_var1",
+"subStyle_0_var2",
+"subStyle_0_var3",
+"subStyle_1_var1",
+"subStyle_1_var2",
+"subStyle_1_var3",
+"subStyle_id",
+"summoner1Casts",
+"summoner1Id",
+"summoner2Casts",
+"summoner2Id",
+"summonerLevel",
+"summonerName",
+"teamEarlySurrendered",
+"teamId",
+"teamPosition",
+"timeCCingOthers",
+"timePlayed",
+"totalDamageDealt",
+"totalDamageDealtToChampions",
+"totalDamageShieldedOnTeammates",
+"totalDamageTaken",
+"totalHeal",
+"totalHealsOnTeammates",
+"totalMinionsKilled",
+"totalTimeCCDealt",
+"totalTimeSpentDead",
+"totalUnitsHealed",
+"tripleKills",
+"trueDamageDealt",
+"trueDamageDealtToChampions",
+"trueDamageTaken",
+"turretKills",
+"turretsLost",
+"turretTakedowns",
+"unrealKills",
+"visionClearedPings",
+"visionScore",
+"visionWardsBoughtInGame",
+"wardsKilled",
+"wardsPlaced",
+"win"]
+ %}
+
+{% set exclude_list = ["championId","matchId"] %}
+
+WITH temp_table AS (
+    {{ dbt_utils.unpivot( 
+    relation =  ref('stg_players_match'),
+    cast_to = "int",
+    exclude = exclude_list,
+    remove = remove_list,
+    field_name = "details",
+    value_name = "runeId"
+    )}}
+)
+
+SELECT
+    temp_table.matchId,
+    match_league_points.tier,
+    match_league_points.division,
+    -- temp_table.championId,
+    champion_info.id,
+    champion_info.name AS champion_name,
+    champion_info.title AS champion_title,
+    champion_info.primary_class AS champion_primary_class,
+    champion_info.secondary_class AS champion_secondary_class,
+    -- temp_table.runeId,
+    CASE 
+        WHEN temp_table.details = "primaryStyle_0_id" THEN "Keystone"
+        WHEN temp_table.details = "primaryStyle_1_id" THEN "Primary Slot 1"
+        WHEN temp_table.details = "primaryStyle_2_id" THEN "Primary Slot 2"
+        WHEN temp_table.details = "primaryStyle_3_id" THEN "Primary Slot 3"
+        WHEN temp_table.details = "subStyle_0_id" THEN "Secondary Slot 1"
+        WHEN temp_table.details = "subStyle_1_id" THEN "Secondary Slot 2"
+        WHEN temp_table.details = "statPerks_offense" THEN "Offense Park"
+        WHEN temp_table.details = "statPerks_defense" THEN "Defense Park"
+        WHEN temp_table.details = "statPerks_flex" THEN "Flex Park"
+        ELSE NULL
+    END AS rune_detail,
+    -- rune_info.id AS rune_id,
+    -- rune_info.key AS  rune_key,
+    rune_info.icon AS rune_icon,
+    rune_path_info.rune_path_icon AS rune_path_icon,
+    rune_info.name AS rune_name,
+    rune_info.rune_path
+
+
+FROM temp_table
+LEFT JOIN {{ source("data_dragon", "rune_info")}} AS rune_info
+ON rune_info.id = temp_table.runeId
+LEFT JOIN {{ source("data_dragon", "rune_info")}} AS rune_path_info
+ON  rune_path_info.name = rune_info.rune_path
+LEFT JOIN {{ source("data_dragon", "champion_info")}}  AS champion_info
+ON champion_info.key = temp_table.championId
+LEFT JOIN {{ ref("match_league_points")}} AS match_league_points
+ON match_league_points.matchId = temp_table.matchId
+ORDER BY  matchId, championId  DESC
