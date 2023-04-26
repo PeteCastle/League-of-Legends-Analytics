@@ -27,12 +27,14 @@ data "databricks_node_type" "smallest" {
 }
 
 data "databricks_spark_version" "latest_version" {
+  depends_on = [azurerm_databricks_workspace.db_project]
   latest = true
-  long_term_support = true
+  # long_term_support = true
   ml = false
   gpu = false
   scala = "2.12"
-  spark_version = "3.3.2"
+  spark_version = "3.4.0"
+
 
 }
 
@@ -64,11 +66,11 @@ resource "azurerm_storage_container" "sc_project" {
   container_access_type = "blob"
 }
 
-resource "azurerm_storage_container" "storage_block" {
-  name                  = "zoomcamp-storage-block"
-  storage_account_name  = azurerm_storage_account.sa_project.name
-  container_access_type = "blob"
-}
+# resource "azurerm_storage_container" "storage_block" {
+#   name                  = "zoomcamp-storage-block"
+#   storage_account_name  = azurerm_storage_account.sa_project.name
+#   container_access_type = "blob"
+# }
 
 resource "azurerm_databricks_workspace" "db_project" {
   name                = "zoomcampdbproject"
@@ -101,34 +103,34 @@ resource "databricks_cluster" "cluster_project" {
   }
 }
 
-resource "azurerm_container_group" "zoomcamp-container-group" {
-  name                = "zoomcamp-container-group"
-  location            = azurerm_resource_group.rg_project.location
-  resource_group_name = azurerm_resource_group.rg_project.name
-  ip_address_type     = "Public"
-  os_type             = "Linux"
+# resource "azurerm_container_group" "zoomcamp-container-group" {
+#   name                = "zoomcamp-container-group"
+#   location            = azurerm_resource_group.rg_project.location
+#   resource_group_name = azurerm_resource_group.rg_project.name
+#   ip_address_type     = "Public"
+#   os_type             = "Linux"
 
-  container {
-    name   = "prefect-agent-container"
-    image  = "prefecthq/prefect:2-python3.10"
-    cpu    = "1"
-    memory = "1.5"
+#   container {
+#     name   = "prefect-agent-container"
+#     image  = "prefecthq/prefect:2-python3.10"
+#     cpu    = "1"
+#     memory = "1.5"
   
-    ports {
-      port     = 443
-      protocol = "TCP"
-    }
-    secure_environment_variables = {
-      "PREFECT_API_URL" = local.credentials["PREFECT_API_URL"]
-      "PREFECT_API_KEY" = local.credentials["PREFECT_API_KEY"]
-    }
-    commands = [
-      "/bin/bash",
-      "-c",
-      "pip install adlfs s3fs requests pandas aiohttp asyncio datetime numpy prefect_azure prefect pathlib ; prefect agent start -p default-agent-pool -q test"
-    ]
-  }
+#     ports {
+#       port     = 443
+#       protocol = "TCP"
+#     }
+#     secure_environment_variables = {
+#       "PREFECT_API_URL" = local.credentials["PREFECT_API_URL"]
+#       "PREFECT_API_KEY" = local.credentials["PREFECT_API_KEY"]
+#     }
+#     commands = [
+#       "/bin/bash",
+#       "-c",
+#       "pip install adlfs s3fs requests pandas aiohttp asyncio datetime numpy prefect_azure prefect pathlib ; prefect agent start -p default-agent-pool -q test"
+#     ]
+#   }
 
-  depends_on = [databricks_cluster.cluster_project]
-}
+#   depends_on = [databricks_cluster.cluster_project]
+# }
 
