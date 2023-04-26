@@ -1,0 +1,13 @@
+aiohttp
+asyncio
+numpy
+prefect
+prefect-azure
+psycopg
+pandas
+azure
+azure-storage-blob
+databricks-connect
+dbt-databricks
+pyarrow
+pyspark

@@ -9,23 +9,15 @@ description: |-
       language (str): Language to get data from. Default: PH - English
   Returns:
       None
-version: 8838231e6fce767c923fae2a335cc715
+version: 0718f41d3126d6ab1b3c72e414ba90f5
 # The work queue that will handle this deployment's runs
 work_queue_name: default
-work_pool_name: default-agent-pool
+work_pool_name: null
 tags: []
-parameters: {
-    "version": "13.7.1",
-}
+parameters: {}
 schedule: null
-is_schedule_active: true
+is_schedule_active: null
 infra_overrides: {}
-
-###
-### DO NOT EDIT BELOW THIS LINE
-###
-flow_name: Extract League Assets
-manifest_path: null
 infrastructure:
   type: process
   env: {}
@@ -34,11 +26,14 @@ infrastructure:
   command: null
   stream_output: true
   working_dir: null
-  _block_document_id: 3671d2d6-d087-4301-bd6f-3d9124cbe64c
-  _block_document_name: anonymous-3aa0b432-6bee-4840-8ee5-caa59f75dd98
-  _is_anonymous: true
   block_type_slug: process
   _block_type_slug: process
+
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: Extract League Assets
+manifest_path: null
 storage: null
 path: D:\Educational Others\2023 Data Engineering Zoomcamp Project
 entrypoint: flows\league_assets.py:get_league_assets
@@ -58,4 +53,4 @@ parameter_openapi_schema:
   required:
   - version
   definitions: null
-timestamp: '2023-04-06T03:41:21.454817+00:00'
+timestamp: '2023-04-26T14:18:38.616258+00:00'

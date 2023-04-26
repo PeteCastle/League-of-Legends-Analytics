@@ -122,7 +122,7 @@ def etl_all_league(
         Returns:
             None
     """
-    for tier in ["BRONZE", "IRON"]:
+    for tier in ["challengerleagues", "grandmasterleagues", "masterleagues","DIAMOND","PLATINUM","GOLD","SILVER","BRONZE", "IRON"]:
         if tier in ["challengerleagues", "grandmasterleagues", "masterleagues"]:
             print(f"Starting {tier} ETL")
             etl_per_league(queue, tier, "I", pages, regions, ACCOUNT_INPUT_LIMIT, MATCH_INPUT_LIMIT, API_KEYS, MAXIMUM_CONCURRENT_REQUESTS)
