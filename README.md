@@ -9,6 +9,12 @@
     - [Data Dragon](#data-dragon)
   - [Technologies/Tools Used](#technologiestools-used)
   - [Project Directory Details](#project-directory-details)
+- [How does the Complete ETL process work?](#how-does-the-complete-etl-process-work)
+      - [Prefect Flow](#prefect-flow)
+      - [Logical Directories of File System](#logical-directories-of-file-system)
+      - [Databricks Spark](#databricks-spark)
+      - [DBT-Databricks](#dbt-databricks)
+      - [PowerBi](#powerbi)
 - [Reproduction Step](#reproduction-step)
   - [Setting Up](#setting-up)
     - [Clone the repository](#clone-the-repository)
@@ -25,12 +31,6 @@
       - [Azure Blob Storage](#azure-blob-storage)
       - [Prefect](#prefect)
       - [Databricks/Spark](#databricksspark)
-  - [How does the Complete ETL process work?](#how-does-the-complete-etl-process-work)
-      - [Prefect Flow](#prefect-flow)
-      - [Logical Directories of File System](#logical-directories-of-file-system)
-      - [Databricks Spark](#databricks-spark)
-      - [DBT-Databricks](#dbt-databricks)
-      - [PowerBi](#powerbi)
   - [Reproducing the entire ETL Pipeline](#reproducing-the-entire-etl-pipeline)
     - [Prefect](#prefect-1)
       - [Deploying `all_flows:etl_per_league` to Prefect](#deploying-all_flowsetl_per_league-to-prefect)
@@ -131,6 +131,61 @@ Power BI, a business analytics service provided by Microsoft, was used for data 
 | terraform/main.tf                        | Where all Azure Cloud services are managed as a code.                                                                                                                                                                               |
 | *-depoyment.yaml                         | Deployment files created by Prefect.                                                                                                                                                                                                |
 | *.md                                     | Contains all official documentation about this project.                                                                                                                                                                             |
+
+# How does the Complete ETL process work?
+The following is a simplified process on how ETL works from ingestion from API to storage in Azure Blob Storage:
+#### Prefect Flow
+1. The program obtains the list of players for each leagues using the method [LEAGUE-V4](https://developer.riotgames.com/apis#league-v4)
+2. For each player in the list of players (*or selected if sample size is imited*), the program obtains the Developer-Account-Bounded summonerId and other sets of unique Ids using the method [SUMMONER-V4](https://developer.riotgames.com/apis#summoner-v4)  These IDs will be then used later as a reference (mapping) to obtain other data.  This is required as Riot games have additional layer of security for protecting user data.
+3. Using the list of player IDs, the champion mastery is obtained using the method [CHAMPION-MASTERY-V4](https://developer.riotgames.com/apis#champion-mastery-v4).
+4. Using the list of player IDs, the match history of each player is obtained using the method [MATCH-V4](https://developer.riotgames.com/apis#match-v4). 
+5. Lastly, for each matchIDs obtained from each payer, the match details are obtained using the method [MATCH-V4](https://developer.riotgames.com/apis#match-v4). This is the most expensive API call as it requires a lot of data to be obtained.  This is the reason why the program is designed to obtain the match history first, then the match details.  This is to avoid unnecessary API calls in case the match history is not available.
+6. All of the data obtained from the API calls are transformed into mutiple tables then stored in Azure Blob Storage as a Parquet or CSV.
+7. Similar step is also done in the Data Dragon files.
+   
+#### Logical Directories of File System
+* All data is saved in the Cloud directory `storage_container/resources` *base directory for tables*.
+* Inside this folder, there are five subfolders which contains the fundamental tables of the database.  These are the following:
+    * `champion_mastery` - contains the champion mastery data of each player
+    * `match` - contains the match history of each player
+      * `match/general` - contains the basic data of each match (match type and match duration)
+      * `match/players` - contains player-related data within that match (champion picked, summoner spells, player's statistics)
+      * `match/players_challenges` - initially part of `match/players`, but separated to decrease column count.  Simply tracks the amount of challenge points the player is earning per match.
+      * `match/teams` - contains the team-related data within that match (team statistics, bans, team players)
+    * `data_dragon` - contains the static data of League of Legends assets
+    * `accounts` - contains the summoner data of each player, Developer-Account-Bounded IDs are already removed in this stage
+    * `leagues` - contains the league data of each player
+* For `match` and `leagues` folder, the data is further subdivided into `queue` type (e.g. `RANKED_SOLO_5x5`) then by `tier` (e.g. `challengerleagues`) then by `DIVISION` (e.g. `I`).  This is to allow faster querying of data.
+* The `data_dragon` has its own distinct folders for each patch (e.g. `13.7.1`)
+* The filenames of the tables are the date and time at which the table is uploaded to the Data to ensure that the table is not replaced when it is uploaded to Data Lake.
+  
+#### Databricks Spark
+* Data is loaded to Spark using the `spark.read` method.  The data is then transformed using Spark SQL and Spark Dataframe API.
+```
+leagues_df = spark.read.format("csv").option("header","true").load(f"wasbs://{blob_container}@{storage_account_name}.blob.core.windows.net/resources/leagues/*/*/*/*.csv")
+spark.sql("DROP TABLE IF EXISTS leagues")
+leagues_df.write.partitionBy("tier").mode("overwrite").saveAsTable("leagues")
+```
+* Notice that in this code snippet, multiple wildcards are used to load all data in the subdirectory.  It also grants future users to load data from different `tier` and `division` by simply changing the wildcard.
+* The data is partitioned by `region` and `tier` to allow faster querying.  The data is also stored in a `delta` format to allow faster updates in the future.  Ordering the columns using `z-ordering` will be added in the future release.
+
+#### DBT-Databricks
+* DBT is used to transform the data to the Data Warehouse.  The data is transformed using SQL and Jinja2 templating.
+* DBT is directly connected to the Spark cluster using the `spark` adapter. 
+* Project directory is in `./dbt` folder.
+* Models in `./dbt/models/core` are final tables suitable for Data Analysis.
+* Models in `./dbt/models/staging`are staging tables whose columns selected will be used for core tables.
+* Macros in `./dbt/macros` are used to generate SQL code for the models in the form of Jinja2 templates.
+
+#### PowerBi
+* PowerBi's data source comes from Databricks' Spark Adapter for PowerBi.
+* The data is further transformed to include metrics *(measures and columns)* such as:
+  * Win Rate
+  * Ban Rate
+  * Pick Rate
+  * URL of champion or item
+  * And many more
+
 
 
 # Reproduction Step
@@ -298,62 +353,6 @@ Your Spark Master HTTP Path is the `HTTP Path` Attribute
 `DATABRICKS_CLUSTER_ID` <br>
 Your Databricks Cluster ID is the series of numbers and letters after the backlash in the `HTTP Path` Attribute.
 If your HTTP path is `sql/protocolv1/o/123456789/1244-678999-abcdef`, then the cluster ID is `1244-678999-abcdef`
-
-
-## How does the Complete ETL process work?
-The following is a simplified process on how ETL works from ingestion from API to storage in Azure Blob Storage:
-#### Prefect Flow
-1. The program obtains the list of players for each leagues using the method [LEAGUE-V4](https://developer.riotgames.com/apis#league-v4)
-2. For each player in the list of players (*or selected if sample size is imited*), the program obtains the Developer-Account-Bounded summonerId and other sets of unique Ids using the method [SUMMONER-V4](https://developer.riotgames.com/apis#summoner-v4)  These IDs will be then used later as a reference (mapping) to obtain other data.  This is required as Riot games have additional layer of security for protecting user data.
-3. Using the list of player IDs, the champion mastery is obtained using the method [CHAMPION-MASTERY-V4](https://developer.riotgames.com/apis#champion-mastery-v4).
-4. Using the list of player IDs, the match history of each player is obtained using the method [MATCH-V4](https://developer.riotgames.com/apis#match-v4). 
-5. Lastly, for each matchIDs obtained from each payer, the match details are obtained using the method [MATCH-V4](https://developer.riotgames.com/apis#match-v4). This is the most expensive API call as it requires a lot of data to be obtained.  This is the reason why the program is designed to obtain the match history first, then the match details.  This is to avoid unnecessary API calls in case the match history is not available.
-6. All of the data obtained from the API calls are transformed into mutiple tables then stored in Azure Blob Storage as a Parquet or CSV.
-7. Similar step is also done in the Data Dragon files.
-   
-#### Logical Directories of File System
-* All data is saved in the Cloud directory `storage_container/resources` *base directory for tables*.
-* Inside this folder, there are five subfolders which contains the fundamental tables of the database.  These are the following:
-    * `champion_mastery` - contains the champion mastery data of each player
-    * `match` - contains the match history of each player
-      * `match/general` - contains the basic data of each match (match type and match duration)
-      * `match/players` - contains player-related data within that match (champion picked, summoner spells, player's statistics)
-      * `match/players_challenges` - initially part of `match/players`, but separated to decrease column count.  Simply tracks the amount of challenge points the player is earning per match.
-      * `match/teams` - contains the team-related data within that match (team statistics, bans, team players)
-    * `data_dragon` - contains the static data of League of Legends assets
-    * `accounts` - contains the summoner data of each player, Developer-Account-Bounded IDs are already removed in this stage
-    * `leagues` - contains the league data of each player
-* For `match` and `leagues` folder, the data is further subdivided into `queue` type (e.g. `RANKED_SOLO_5x5`) then by `tier` (e.g. `challengerleagues`) then by `DIVISION` (e.g. `I`).  This is to allow faster querying of data.
-* The `data_dragon` has its own distinct folders for each patch (e.g. `13.7.1`)
-* The filenames of the tables are the date and time at which the table is uploaded to the Data to ensure that the table is not replaced when it is uploaded to Data Lake.
-  
-#### Databricks Spark
-* Data is loaded to Spark using the `spark.read` method.  The data is then transformed using Spark SQL and Spark Dataframe API.
-```
-leagues_df = spark.read.format("csv").option("header","true").load(f"wasbs://{blob_container}@{storage_account_name}.blob.core.windows.net/resources/leagues/*/*/*/*.csv")
-spark.sql("DROP TABLE IF EXISTS leagues")
-leagues_df.write.partitionBy("tier").mode("overwrite").saveAsTable("leagues")
-```
-* Notice that in this code snippet, multiple wildcards are used to load all data in the subdirectory.  It also grants future users to load data from different `tier` and `division` by simply changing the wildcard.
-* The data is partitioned by `region` and `tier` to allow faster querying.  The data is also stored in a `delta` format to allow faster updates in the future.  Ordering the columns using `z-ordering` will be added in the future release.
-
-#### DBT-Databricks
-* DBT is used to transform the data to the Data Warehouse.  The data is transformed using SQL and Jinja2 templating.
-* DBT is directly connected to the Spark cluster using the `spark` adapter. 
-* Project directory is in `./dbt` folder.
-* Models in `./dbt/models/core` are final tables suitable for Data Analysis.
-* Models in `./dbt/models/staging`are staging tables whose columns selected will be used for core tables.
-* Macros in `./dbt/macros` are used to generate SQL code for the models in the form of Jinja2 templates.
-
-#### PowerBi
-* PowerBi's data source comes from Databricks' Spark Adapter for PowerBi.
-* The data is further transformed to include metrics *(measures and columns)* such as:
-  * Win Rate
-  * Ban Rate
-  * Pick Rate
-  * URL of champion or item
-  * And many more
-
 
 ## Reproducing the entire ETL Pipeline
 ### Prefect
