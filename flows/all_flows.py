@@ -54,7 +54,7 @@ def etl_per_league(
     
 
     #League Entries
-    league_info, player_league_info = getLeagueEntries(queue=queue, tier=tier, division='I', pages=1, regions = regions, RIOT_TOKENS=API_KEYS)
+    league_info, player_league_info = getLeagueEntries(queue=queue, tier=tier, division=division, pages=pages, regions = regions, RIOT_TOKENS=API_KEYS)
 
     #Player Entries
     player_leagues_tuple = list(player_league_info[["region","summonerId","riot_token"]].itertuples(index=False, name=None))
